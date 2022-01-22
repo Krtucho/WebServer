@@ -23,9 +23,9 @@ int main(int argc, char const *argv[])
  }
  
  /* Leemos las entradas del directorio */
- printf("i-nodo\toffset\t\tlong\tnombre\n");
+ printf("i-nodo\toffset\t\tlong\tnombre\t\tType\n");
  while ((direntp = readdir(dirp)) != NULL) {
- printf("%d\t%d\t%d\t%s\n", direntp->d_ino, direntp->d_off, direntp->d_reclen, direntp->d_name);
+ printf("%d\t%d\t%d\t%s\t%d\n", direntp->d_ino, direntp->d_off, direntp->d_reclen, direntp->d_name, direntp->d_type);
  }
  
  /* Cerramos el directorio */
