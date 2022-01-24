@@ -257,7 +257,10 @@ void get_filetype(char *filename, char *filetype)
 void serve_static(int fd, char *filename, int filesize, bool is_directory, DIR * dirp)
 {
     int srcfd;
-    char *srcp, filetype[MAXLINE], buf[MAXBUF];
+    char *srcp;
+    //, 
+    char * filetype=(char *)malloc(sizeof(char));//[MAXLINE], 
+    char * buf=(char *)malloc(sizeof(char));//[MAXBUF];
     
     if(is_directory){ // If is a directory (not a file)
          if (dirp == NULL){
@@ -306,7 +309,8 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, DIR *
         rio_writen(fd, srcp, filesize);
         munmap(srcp, filesize);
     }
-
+    free(filetype);
+    free(buf);
 }
 
 void serve_dynamic(int fd, char *filename, char *cgiargs)
