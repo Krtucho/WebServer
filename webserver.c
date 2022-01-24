@@ -192,8 +192,8 @@ int open_listenfd(int port)
     return listenfd;
 }
 
-char * create_html_code(char * filename, DIR * dirp){
-    char * output;
+void create_html_code(char * filename, DIR * dirp, char * output){
+    // char output[100000];
 
 
     strcpy(output, "<html><head>Directorio "); // Encabezado
@@ -206,13 +206,11 @@ char * create_html_code(char * filename, DIR * dirp){
     while ((direntp = readdir(dirp)) != NULL) {
         strcat(output, "<tr><td><a href=\"");
         strcat(output, filename);
-        sprintf(output, "%s/%s\">directorio1</a></td><td>0</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name);
+        sprintf(output, "%s/%s\">%s</a></td><td>0</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name);
         // strcat(output, direntp->d_name);
     }
 
     strcat(output, "</table></body></html>"); // Copiando el contenido del final
-
-    return output;
 }
 
 int parse_uri(char *uri, char *filename, char *cgiargs)
@@ -267,8 +265,9 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, DIR *
             exit(2);
             }
             
-
-            char * output = create_html_code(filename, dirp);
+            char output[20000];
+            //char * output = 
+            create_html_code(filename, dirp, output);
             /* Leemos las entradas del directorio */
             // printf("i-nodo\toffset\t\tlong\tnombre\t\tType\n");
             // while ((direntp = readdir(dirp)) != NULL) {
@@ -279,7 +278,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, DIR *
             closedir(dirp);
 
 
-        filesize = sizeof(output);
+        filesize = strlen(output);
         sprintf(buf, "HTTP/1.0 200 OK\r\n");
         sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
         sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
