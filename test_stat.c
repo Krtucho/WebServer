@@ -10,7 +10,7 @@ int main(int argc, char const *argv[])
     struct stat buf;
     char mtime[100];
 
-    int a = stat("test.txt", &buf);
+    int a = stat("/home/krtucho/test.txt", &buf);
     printf("st_mode = %o\n", buf.st_mode);
 
     strcpy(mtime, ctime(&buf.st_mtime));

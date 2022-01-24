@@ -13,11 +13,6 @@
 #include<sys/sendfile.h>
 #include<errno.h>
 #include <sys/mman.h>
-
-#include<stdbool.h>
-
-// DIR dirent opendir readdir
-#include <dirent.h>
 // #include <sys/types.h>
 //#include <sys/socket.h>
 
@@ -192,37 +187,14 @@ int open_listenfd(int port)
     return listenfd;
 }
 
-char * create_html_code(char * filename, DIR * dirp){
-    char * output;
-
-
-    strcpy(output, "<html><head>Directorio "); // Encabezado
-    strcat(output, filename); // Ruta completa (absolute path) del directorio o archivo por el que se esta buscando
-    strcat(output, "</head><body><table><tr><th>Name</th><th>Size</th><th>Date</th></tr>"); // Comenzando a construir la tabla con nombre, tamanno y fecha
-
-    // Comenzando a agregar cada directorio y archivo
-    struct dirent *direntp;
-
-    while ((direntp = readdir(dirp)) != NULL) {
-        strcat(output, "<tr><td><a href=\"");
-        strcat(output, filename);
-        sprintf(output, "%s/%s\">directorio1</a></td><td>0</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name);
-        // strcat(output, direntp->d_name);
-    }
-
-    strcat(output, "</table></body></html>"); // Copiando el contenido del final
-
-    return output;
-}
-
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
     char *ptr;
     
     if (!strstr(uri, "cgi-bin")) {/* Static content */
     strcpy(cgiargs, "");
-    // strcpy(filename, ".");          COMENTA_ESTALINEA
-    strcpy(filename, uri);// 
+    strcpy(filename, ".");
+    strcat(filename, uri);
     if (uri[strlen(uri)-1] == '/')
     strcat(filename, "home.html");
     return 1;
@@ -256,58 +228,26 @@ void get_filetype(char *filename, char *filetype)
     strcpy(filetype, "text/plain");
 }
 
-void serve_static(int fd, char *filename, int filesize, bool is_directory, DIR * dirp)
+void serve_static(int fd, char *filename, int filesize)
 {
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXBUF];
     
-    if(is_directory){ // If is a directory (not a file)
-         if (dirp == NULL){
-            printf("Error: No se puede abrir el directorio\n");
-            exit(2);
-            }
-            
-
-            char * output = create_html_code(filename, dirp);
-            /* Leemos las entradas del directorio */
-            // printf("i-nodo\toffset\t\tlong\tnombre\t\tType\n");
-            // while ((direntp = readdir(dirp)) != NULL) {
-            // printf("%d\t%d\t%d\t%s\t%d\n", direntp->d_ino, direntp->d_off, direntp->d_reclen, direntp->d_name, direntp->d_type);
-            // }
-            
-            /* Cerramos el directorio */
-            closedir(dirp);
-
-
-        filesize = sizeof(output);
-        sprintf(buf, "HTTP/1.0 200 OK\r\n");
-        sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
-        sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
-        sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, "text/html");
-        rio_writen(fd, buf, strlen(buf));
-        rio_writen(fd, output, filesize);
-    }
-
-
     /* Send response headers to client */
-    
+    get_filetype(filename, filetype);
+    sprintf(buf, "HTTP/1.0 200 OK\r\n");
+    sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+    sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
+    sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
+    rio_writen(fd, buf, strlen(buf));
     
     /* Send response body to client */
-    else{ // If is a file
-        get_filetype(filename, filetype);
-        sprintf(buf, "HTTP/1.0 200 OK\r\n");
-        sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
-        sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
-        sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
-        rio_writen(fd, buf, strlen(buf));
-
-        srcfd = open(filename, O_RDONLY, 0);
-        srcp = mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-        close(srcfd);
-        rio_writen(fd, srcp, filesize);
-        munmap(srcp, filesize);
-    }
-
+    
+    srcfd = open(filename, O_RDONLY, 0);
+    srcp = mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
+    close(srcfd);
+    rio_writen(fd, srcp, filesize);
+    munmap(srcp, filesize);
 }
 
 void serve_dynamic(int fd, char *filename, char *cgiargs)
@@ -386,18 +326,12 @@ void doit(int fd)
             }
             
         if (is_static) {/* Serve static content */
-        // if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
-        //     clienterror(fd, filename, "403", "Forbidden",
-        //     "Tiny couldn’t read the file");
-        //     return;
-        //     }
-            DIR * dirp = opendir(filename);
-            
-            struct dirent *direntp = readdir(dirp);
-            bool is_directory = direntp->d_type == 4;
-            closedir(dirp);
-            dirp = opendir(filename);
-            serve_static(fd, filename, sbuf.st_size, is_directory, dirp);
+        if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
+            clienterror(fd, filename, "403", "Forbidden",
+            "Tiny couldn’t read the file");
+            return;
+            }
+            serve_static(fd, filename, sbuf.st_size);
             }
             else {/* Serve dynamic content */
             if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
