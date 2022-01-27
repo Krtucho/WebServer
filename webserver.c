@@ -218,11 +218,13 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
     char *ptr;
     
     if (!strstr(uri, "cgi-bin")) {/* Static content */
-    strcpy(cgiargs, "");
-    // strcpy(filename, ".");          COMENTA_ESTALINEA
-    strcpy(filename, uri);// 
+        strcpy(cgiargs, "");
+        // strcpy(filename, ".");          COMENTA_ESTALINEA
+        strcpy(filename, uri);// 
     if (uri[strlen(uri)-1] == '/')
-    strcat(filename, "home.html");
+        if(strlen(uri)<=1){
+            strcat(filename, "home.html");
+        }
     return 1;
     }
     else {/* Dynamic content */
@@ -396,10 +398,12 @@ void doit(int fd)
         //     }
             DIR * dirp = opendir(filename);
             
-            struct dirent *direntp = readdir(dirp);
-            bool is_directory = direntp->d_type == 4;
-            closedir(dirp);
-            dirp = opendir(filename);
+            // struct dirent *direntp = readdir(dirp);
+            bool is_directory =  (S_ISDIR(sbuf.st_mode));//direntp->d_type == 4;
+            // closedir(dirp);
+            if(is_directory)
+                dirp = opendir(filename);
+            
             serve_static(fd, filename, sbuf.st_size, is_directory, dirp);
             }
             else {/* Serve dynamic content */
@@ -437,7 +441,7 @@ void doit(int fd)
     //     fprintf(stderr, "usage: %s <port>\n", argv[0]);
     //     exit(1);
     // }
-    port = 5501;//atoi(argv[1]);
+    port = 5502;//atoi(argv[1]);
 
     listenfd = open_listenfd(port);
     while (1) {
