@@ -513,15 +513,15 @@ void doit(int fd)
     home_path = strdup("/home");
 
     /* Check command line args */
-    // if (argc <= 1) {
-    //     fprintf(stderr, "usage: %s <port> <folder>\n", argv[0]);
-    //     exit(1);
-    // }
-    port = 5502;//atoi(argv[1]);
+    if (argc <= 1) {
+        fprintf(stderr, "usage: %s <port> <folder>\n", argv[0]);
+        exit(1);
+    }
+    port = atoi(argv[1]);
 
-    // if(argc == 3){
-    //     home_path = argv[2];
-    // }
+    if(argc == 3){
+        home_path = argv[2];
+    }
 
     listenfd = open_listenfd(port);
     while (1) {
