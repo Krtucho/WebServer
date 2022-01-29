@@ -194,6 +194,8 @@ int open_listenfd(int port)
 
 void create_html_code(char * filename, char * output){
     // char output[100000];
+    char * temp = (char *)calloc(sizeof(char), 20000);
+    struct stat sbuf;
     DIR * dirp = opendir(filename);
     if (dirp == NULL){
         printf("Error: Cannot open dir\n");
@@ -211,9 +213,16 @@ void create_html_code(char * filename, char * output){
     while ((direntp = readdir(dirp)) != NULL) {
         if(strcmp(direntp->d_name, ".") == 0 || strcmp(direntp->d_name, "..") == 0)
             continue;
+        strcpy(temp, filename);
+        strcat(temp, "/");
+        strcat(temp, direntp->d_name);
+
+        if (stat(temp, &sbuf) < 0)
+            continue;
+
         strcat(output, "<tr><td><a href=\"");
         strcat(output, filename);
-        sprintf(output, "%s/%s\">%s</a></td><td>0</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name);
+        sprintf(output, "%s/%s\">%s</a></td><td>%d</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name, sbuf.st_size);
         // strcat(output, direntp->d_name);
     }
 
@@ -223,6 +232,8 @@ void create_html_code(char * filename, char * output){
     closedir(dirp);
     // free(dirp);
     // free(direntp);
+    free(temp);
+
 }
 
 
