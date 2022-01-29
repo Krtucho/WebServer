@@ -1,3 +1,4 @@
+#define RIO_BUFSIZE 8192
 #include<stdlib.h>
 #include<unistd.h>
 #include<stdio.h>
@@ -23,7 +24,6 @@
 #define MAXLINE 20000
 #define MAXBUF 20000
 #define LISTENQ 1024
-#define RIO_BUFSIZE 8192
 
 char * home_path;
 
@@ -222,7 +222,7 @@ void create_html_code(char * filename, char * output){
 
         strcat(output, "<tr><td><a href=\"");
         strcat(output, filename);
-        sprintf(output, "%s/%s\">%s</a></td><td>%ld</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name, sbuf.st_size);
+        sprintf(output, "%s/%s\">%s</a></td><td>%d</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name, sbuf.st_size);
         // strcat(output, direntp->d_name);
     }
 
@@ -338,9 +338,7 @@ void get_filetype(char *filename, char *filetype)
 
 void clienterror(int fd, char *cause, char *errnum,
  char *shortmsg, char *longmsg)
- {  char *buf=(char *)calloc(sizeof(char), MAXLINE);//[MAXLINE], 
-    char* body=(char *)calloc(sizeof(char), MAXBUF);//[MAXLINE], 
-     //char buf[MAXLINE], body[MAXBUF];
+ {  char buf[MAXLINE], body[MAXBUF];
  /* Build the HTTP response body */
  sprintf(body, "<html><title>Tiny Error</title>");
  sprintf(body, "%s<body bgcolor=""ffffff"">\r\n", body);
@@ -356,8 +354,6 @@ rio_writen(fd, buf, strlen(buf));
  sprintf(buf, "Content-length: %d\r\n\r\n", (int)strlen(body));
 rio_writen(fd, buf, strlen(buf));
     rio_writen(fd, body, strlen(body));
-    free(buf);
-    free(body);
 }
 
 void serve_static(int fd, char *filename, int filesize, bool is_directory, struct stat sbuf)
@@ -409,7 +405,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
         srcfd = open(filename, O_RDONLY, 0);
         if(fd < 0)
             clienterror(fd, filename, "404", "Not found",
-                    "Could not find this file");
+                    "Couldn’t find this file");
         else{
             while(sendfile(fd, srcfd, NULL, sbuf.st_blksize) > 0)
             {
@@ -477,7 +473,7 @@ void doit(int fd)
         is_static = parse_uri(uri, filename, cgiargs);
         if (stat(filename, &sbuf) < 0) {
             clienterror(fd, filename, "404", "Not found",
-            "Tiny could not find this file");
+            "Tiny couldn’t find this file");
             return;
             }
             
@@ -498,7 +494,7 @@ void doit(int fd)
             else {/* Serve dynamic content */
             if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
                 clienterror(fd, filename, "403", "Forbidden",
-                "Tiny could not run the CGI program"
+                "Tiny couldn’t run the CGI program"
                 );
                 return;
                 }
