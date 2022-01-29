@@ -367,7 +367,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
     if(is_directory){ // If is a directory (not a file)
          
             
-        char * output = (char *)calloc(sizeof(char), 20000);//[20000];
+        char * output = (char *)calloc(sizeof(char), 200000);//[20000];
         //char * output = 
         create_html_code(filename, output);
         /* Leemos las entradas del directorio */
