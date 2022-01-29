@@ -338,16 +338,15 @@ void get_filetype(char *filename, char *filetype)
 
 void clienterror(int fd, char *cause, char *errnum,
  char *shortmsg, char *longmsg)
- {  
-    char *buf=(char *)calloc(sizeof(char), MAXLINE);//[MAXLINE], 
+ {  char *buf=(char *)calloc(sizeof(char), MAXLINE);//[MAXLINE], 
     char* body=(char *)calloc(sizeof(char), MAXBUF);//[MAXLINE], 
      //char buf[MAXLINE], body[MAXBUF];
  /* Build the HTTP response body */
- sprintf(body, "<html><title>Tiny Error</title>");
+ sprintf(body, "<html><title>My WebServer Error</title>");
  sprintf(body, "%s<body bgcolor=""ffffff"">\r\n", body);
  sprintf(body, "%s%s: %s\r\n", body, errnum, shortmsg);
  sprintf(body, "%s<p>%s: %s\r\n", body, longmsg, cause);
- sprintf(body, "%s<hr><em>The Tiny Web server</em>\r\n", body);
+ sprintf(body, "%s<hr><em>My WebServer</em>\r\n", body);
 
  /* Print the HTTP response */
  sprintf(buf, "HTTP/1.0 %s %s\r\n", errnum, shortmsg);
@@ -386,7 +385,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
 
         filesize = strlen(output);
         sprintf(buf, "HTTP/1.0 200 OK\r\n");
-        sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+        sprintf(buf, "%sServer: My WebServer\r\n", buf);
         sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
         sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, "text/html");
         rio_writen(fd, buf, strlen(buf));
@@ -402,7 +401,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
     else{ // If is a file
         get_filetype(filename, filetype);
         sprintf(buf, "HTTP/1.0 200 OK\r\n");
-        sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+        sprintf(buf, "%sServer: My WebServer\r\n", buf);
         sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
         sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
         rio_writen(fd, buf, strlen(buf));
@@ -410,7 +409,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
         srcfd = open(filename, O_RDONLY, 0);
         if(fd < 0)
             clienterror(fd, filename, "404", "Not found",
-                    "Could not find this file");
+                    "Couldn't find this file");
         else{
             while(sendfile(fd, srcfd, NULL, sbuf.st_blksize) > 0)
             {
@@ -469,7 +468,7 @@ void doit(int fd)
     sscanf(buf, "%s %s %s", method, uri, version);
     if (strcasecmp(method, "GET")) {
         clienterror(fd, method, "501", "Not Implemented",
-        "Tiny does not implement this method");
+        "My WebServer does not implement this method");
         return;
         }
         read_requesthdrs(&rio);
@@ -478,7 +477,7 @@ void doit(int fd)
         is_static = parse_uri(uri, filename, cgiargs);
         if (stat(filename, &sbuf) < 0) {
             clienterror(fd, filename, "404", "Not found",
-            "Tiny could not find this file");
+            "My WebServer couldn't find this file");
             return;
             }
             
@@ -499,7 +498,7 @@ void doit(int fd)
             else {/* Serve dynamic content */
             if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
                 clienterror(fd, filename, "403", "Forbidden",
-                "Tiny could not run the CGI program"
+                "My WebServer couldn't run the CGI program"
                 );
                 return;
                 }
@@ -547,4 +546,3 @@ void doit(int fd)
         close(connfd);
     }
 }
-
