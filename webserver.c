@@ -12,6 +12,7 @@
 #include<sys/sendfile.h>
 #include<errno.h>
 #include <sys/mman.h>
+#include <time.h>
 
 #include<stdbool.h>
 
@@ -192,6 +193,12 @@ int open_listenfd(int port)
     return listenfd;
 }
 
+// void transform_time(int* year,int* month,int* day,int* hour,int* minute,int* second)
+// {
+
+// }
+
+
 void create_html_code(char * filename, char * output){
     // char output[100000];
     char * temp = (char *)calloc(sizeof(char), 20000);
@@ -222,10 +229,25 @@ void create_html_code(char * filename, char * output){
 
         strcat(output, "<tr><td><a href=\"");
         strcat(output, filename);
-        sprintf(output, "%s/%s\">%s</a></td><td>%ld</td><td>2017-01-20 10:46:34</td></tr>", output, direntp->d_name, direntp->d_name, sbuf.st_size);
-        // strcat(output, direntp->d_name);
-    }
 
+
+        //int year,month,day,hour,minute,second;
+        struct stat time;
+        //char mtime[100];
+        
+        char*actual_filename=calloc(500,sizeof(char));
+        strcpy(actual_filename,filename);
+        strcat(actual_filename,"/");
+        strcat(actual_filename,direntp->d_name);
+        stat(actual_filename, &time);
+        char* temp_time=calloc(100,sizeof(char));
+        strcpy(temp_time, ctime(&time.st_mtime));
+
+        sprintf(output, "%s/%s\">%s</a></td><td>%ld</td><td>%s</td></tr>", output, direntp->d_name, direntp->d_name, sbuf.st_size,temp_time);
+
+        free(temp_time);
+    }
+    
     strcat(output, "</table></body></html>"); // Copiando el contenido del final
     
     /* Cerramos el directorio */
@@ -371,7 +393,7 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
     if(is_directory){ // If is a directory (not a file)
          
             
-        char * output = (char *)calloc(sizeof(char), 20000);//[20000];
+        char * output = (char *)calloc(sizeof(char), 200000);//[20000];
         //char * output = 
         create_html_code(filename, output);
         /* Leemos las entradas del directorio */
