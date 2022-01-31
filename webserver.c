@@ -373,7 +373,7 @@ void clienterror(int fd, char *cause, char *errnum,
  /* Print the HTTP response */
  sprintf(buf, "HTTP/1.0 %s %s\r\n", errnum, shortmsg);
  rio_writen(fd, buf, strlen(buf));
-sprintf(buf, "Content-type: text/html\r\n");
+sprintf(buf, "Content-type: text/html; charset=utf-8\r\n");
 rio_writen(fd, buf, strlen(buf));
  sprintf(buf, "Content-length: %d\r\n\r\n", (int)strlen(body));
 rio_writen(fd, buf, strlen(buf));
@@ -409,7 +409,9 @@ void serve_static(int fd, char *filename, int filesize, bool is_directory, struc
         sprintf(buf, "HTTP/1.0 200 OK\r\n");
         sprintf(buf, "%sServer: My WebServer\r\n", buf);
         sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
-        sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, "text/html");
+        sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, "text/html; charset=utf-8");
+        // sprintf(buf, "%scharset= utf-8\r\n\r\n", buf);
+        
         rio_writen(fd, buf, strlen(buf));
         rio_writen(fd, output, filesize);
         free(output);
